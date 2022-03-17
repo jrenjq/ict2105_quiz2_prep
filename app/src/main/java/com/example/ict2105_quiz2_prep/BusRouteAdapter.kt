@@ -15,7 +15,7 @@ class BusRouteAdapter(private val busRecordList: List<BusRoute>)
         viewType: Int
     ): BusRouteAdapter.ViewHolder {
         val v = LayoutInflater.from(parent.context)
-                              .inflate(R.layout.recyclerview_item, parent, false)
+                              .inflate(R.layout.recyclerview_item_bus_records, parent, false)
         return ViewHolder(v)
     }
 

@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">ICT2105_Quiz2_Prep</string>
+    <string name="user_sharedprefkey">USERSPKEY</string>
 </resources>
