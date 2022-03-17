@@ -5,13 +5,16 @@ import android.content.Intent
 import android.os.Binder
 import android.os.Handler
 import android.os.IBinder
+import android.util.Log
 import com.example.ict2105_quiz2_prep.entity.Home
+import kotlinx.coroutines.*
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVParser
 import java.io.BufferedReader
 import java.io.InputStreamReader
+import java.lang.Runnable
 
-class ReadCSVAndUpdateListWithIntervalService : Service() {
+class ReadCSVAndUpdateListWithIntervalService : Service(), CoroutineScope by MainScope() {
 
     // static mutableList of Home entities
     companion object {
@@ -70,19 +73,42 @@ class ReadCSVAndUpdateListWithIntervalService : Service() {
         }
         println(">> Final count of Home entities: " + listOfHomeEntities.size)
 
-        // work function with delay of timeInterval ms
-        handler.postDelayed(Runnable {
-            handler.postDelayed(runnable!!, timeInterval.toLong())
-            // desired function to do every x ms goes here
-
-
-        }.also { runnable = it }, timeInterval.toLong())
+//        // work function with delay of timeInterval ms
+//        handler.postDelayed(Runnable {
+//            handler.postDelayed(runnable!!, timeInterval.toLong())
+//            // desired function to do every x ms goes here
+//
+//
+//        }.also { runnable = it }, timeInterval.toLong())
         return startMode
     }
 
     override fun onBind(intent: Intent): IBinder? {
         // A client is binding to the service with bindService()
+        //starts the broadcast
+        launch {
+            sendBCEverySec()
+        }
         return binder
+    }
+
+    //to send a broadcast every 1 second so main activity can update the list
+    //broadcast will be the 1 home which will be caught by main activity
+    private suspend fun sendBCEverySec() = withContext(Dispatchers.IO){
+        val bcIntent = Intent("HOME")
+
+        for(home in listOfHomeEntities){
+            bcIntent.putExtra("sell", home.sell.toString())
+            bcIntent.putExtra("list", home.list.toString())
+            bcIntent.putExtra("rooms", home.rooms.toString())
+            bcIntent.putExtra("acres", home.acres.toString())
+            bcIntent.putExtra("taxes", home.taxes.toString())
+            bcIntent.setAction("com.example.ict2105_quiz2_prep")
+            sendBroadcast(bcIntent)
+            Log.d("BC 1 HOME:", home.sell.toString())
+            Thread.sleep(1_000)
+        }
+        Log.d("HomeList Exhausted", "no more homes to send")
     }
 
     override fun onUnbind(intent: Intent): Boolean {
