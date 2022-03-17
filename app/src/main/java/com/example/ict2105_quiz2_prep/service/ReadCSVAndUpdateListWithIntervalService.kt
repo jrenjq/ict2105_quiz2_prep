@@ -19,6 +19,7 @@ class ReadCSVAndUpdateListWithIntervalService : Service(), CoroutineScope by Mai
     // static mutableList of Home entities
     companion object {
         private var listOfHomeEntities: MutableList<Home> = mutableListOf()
+        var timeInterval: Long = 1000
     }
 
     private var startMode: Int = START_STICKY  // indicates how to behave if the service is killed
@@ -106,7 +107,7 @@ class ReadCSVAndUpdateListWithIntervalService : Service(), CoroutineScope by Mai
             bcIntent.setAction("com.example.ict2105_quiz2_prep")
             sendBroadcast(bcIntent)
             Log.d("BC 1 HOME:", home.sell.toString())
-            Thread.sleep(1_000)
+            Thread.sleep(ReadCSVAndUpdateListWithIntervalService.timeInterval.toLong())
         }
         Log.d("HomeList Exhausted", "no more homes to send")
     }
