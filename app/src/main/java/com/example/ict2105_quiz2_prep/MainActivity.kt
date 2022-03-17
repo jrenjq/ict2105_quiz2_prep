@@ -134,8 +134,16 @@ class MainActivity : AppCompatActivity() {
         binding.freqPicker.maxValue = arrayList.size - 1
         binding.freqPicker.displayedValues = arrayList
         binding.freqPicker.wrapSelectorWheel = true
-        binding.freqPicker.setOnValueChangedListener { picker, oldVal, newVal ->
+        binding.freqPicker.setOnValueChangedListener { picker, oldPos, newPos ->
             // any actions to do when values are changed
+            Log.d("picker", arrayList[newPos].toString())
+            picker.value = newPos.toInt()
+            Log.d("picker >>", picker.value.toString())
+            if (picker.value > 2500) {
+                ReadCSVAndUpdateListWithIntervalService.timeInterval = 5_000
+            } else {
+                ReadCSVAndUpdateListWithIntervalService.timeInterval = 1_000
+            }
         }
     }
 

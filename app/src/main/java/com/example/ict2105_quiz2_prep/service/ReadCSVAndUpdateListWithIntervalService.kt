@@ -107,7 +107,7 @@ class ReadCSVAndUpdateListWithIntervalService : Service(), CoroutineScope by Mai
             bcIntent.setAction("com.example.ict2105_quiz2_prep")
             sendBroadcast(bcIntent)
             Log.d("BC 1 HOME:", home.sell.toString())
-            Thread.sleep(ReadCSVAndUpdateListWithIntervalService.timeInterval.toLong())
+            Thread.sleep(ReadCSVAndUpdateListWithIntervalService.timeInterval)
         }
         Log.d("HomeList Exhausted", "no more homes to send")
     }
