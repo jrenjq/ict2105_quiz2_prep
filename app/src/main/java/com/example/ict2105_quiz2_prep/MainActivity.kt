@@ -149,7 +149,7 @@ class MainActivity : AppCompatActivity() {
             val acresData = bundle?.getString("acres")
             val taxesData = bundle?.getString("taxes")
             Log.d("BC RECEIVED", sellData.toString())
-            homeListReceived.add(0, Home(sellData!!.toInt(), listData!!.toInt(),
+            homeListReceived.add(Home(sellData!!.toInt(), listData!!.toInt(),
                                 roomsData!!.toInt(), acresData!!.toFloat(),
                                 taxesData!!.toInt()))
             homeAdapter!!.notifyDataSetChanged()
