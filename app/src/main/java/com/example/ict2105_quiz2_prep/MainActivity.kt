@@ -153,6 +153,7 @@ class MainActivity : AppCompatActivity() {
                                 roomsData!!.toInt(), acresData!!.toFloat(),
                                 taxesData!!.toInt()))
             homeAdapter!!.notifyDataSetChanged()
+            binding.recyclerView.scrollToPosition(homeListReceived.size-1);
         }
     }
 
