@@ -5,7 +5,6 @@ import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.IBinder
-import android.util.Log
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
@@ -27,9 +26,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var mService: ReadCSVAndUpdateListWithIntervalService
     private var mBound = false
 
-    //for broadcast receiver
-    private val receiver: BroadcastReceiver = BroadcastReceiver()
-
     // create a ServiceConnection that defines callbacks for service binding,
     // which is passed to bindService
     private val connection = object: ServiceConnection {
@@ -48,8 +44,6 @@ class MainActivity : AppCompatActivity() {
     private var layoutManager: RecyclerView.LayoutManager? = null
     private var busRouteAdapter: RecyclerView.Adapter<BusRouteAdapter.ViewHolder>? = null
     private var homeAdapter: RecyclerView.Adapter<HomeAdapter.ViewHolder>? = null
-    //current list of homes that was received from BC
-    private var homeListReceived: MutableList<Home> = mutableListOf<Home>()
 
     // live observer to DB for recyclerview data
     private val busRouteViewModel: BusRouteViewModel by viewModels {
@@ -63,7 +57,15 @@ class MainActivity : AppCompatActivity() {
         val view = binding.root
         setContentView(view)
 
+        // starts the ReadCSVAndUpdateListWithIntervalService
+        Intent(this, ReadCSVAndUpdateListWithIntervalService::class.java).also { intent ->
+            startService(intent)
+        }
 
+        // bind to service onCreate
+        Intent(this, ReadCSVAndUpdateListWithIntervalService::class.java).also {
+            bindService(it, connection, Context.BIND_AUTO_CREATE)
+        }
 
         // prepare the layout manager
         layoutManager = LinearLayoutManager(this)
@@ -107,15 +109,12 @@ class MainActivity : AppCompatActivity() {
                 // set button text to "STOP"
                 binding.toggleButton.text = "STOP"
 
-                // starts the ReadCSVAndUpdateListWithIntervalService
-                Intent(this, ReadCSVAndUpdateListWithIntervalService::class.java).also { intent ->
-                    startForegroundService(intent)
+                // fetch home list from service
+                lateinit var homeListFromService: List<Home>
+                if (mBound) {
+                    homeListFromService = mService.getHomeList()
                 }
-                // bind to service onCreate
-                Intent(this, ReadCSVAndUpdateListWithIntervalService::class.java).also {
-                    bindService(it, connection, Context.BIND_AUTO_CREATE)
-                }
-                homeAdapter = HomeAdapter(homeListReceived)
+                homeAdapter = HomeAdapter(homeListFromService)
                 recyclerViewBusRoute.adapter = homeAdapter
 
             } else {
@@ -134,43 +133,9 @@ class MainActivity : AppCompatActivity() {
         binding.freqPicker.maxValue = arrayList.size - 1
         binding.freqPicker.displayedValues = arrayList
         binding.freqPicker.wrapSelectorWheel = true
-        binding.freqPicker.setOnValueChangedListener { picker, oldPos, newPos ->
+        binding.freqPicker.setOnValueChangedListener { picker, oldVal, newVal ->
             // any actions to do when values are changed
-            Log.d("picker", arrayList[newPos].toString())
-            picker.value = newPos.toInt()
-            Log.d("picker >>", picker.value.toString())
-            if (picker.value > 2500) {
-                ReadCSVAndUpdateListWithIntervalService.timeInterval = 5_000
-            } else {
-                ReadCSVAndUpdateListWithIntervalService.timeInterval = 1_000
-            }
         }
-    }
-
-    //to receive the homes from service
-    private inner class BroadcastReceiver: android.content.BroadcastReceiver(){
-        override fun onReceive(context: Context?, intent: Intent?) {
-            val bundle = intent?.extras
-            val sellData = bundle?.getString("sell")
-            val listData = bundle?.getString("list")
-            val roomsData = bundle?.getString("rooms")
-            val acresData = bundle?.getString("acres")
-            val taxesData = bundle?.getString("taxes")
-            Log.d("BC RECEIVED", sellData.toString())
-            homeListReceived.add(Home(sellData!!.toInt(), listData!!.toInt(),
-                                roomsData!!.toInt(), acresData!!.toFloat(),
-                                taxesData!!.toInt()))
-            homeAdapter!!.notifyDataSetChanged()
-            binding.recyclerView.scrollToPosition(homeListReceived.size-1);
-        }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        //registering BC
-        val intentFilter = IntentFilter()
-        intentFilter.addAction("com.example.ict2105_quiz2_prep")
-        registerReceiver(receiver, intentFilter)
     }
 
     // bind to service on start Activity
@@ -183,9 +148,6 @@ class MainActivity : AppCompatActivity() {
         super.onStop()
         unbindService(connection)
         mBound = false
-
-        //unregisters the BC receiver
-        unregisterReceiver(receiver)
     }
 
     public override fun onDestroy() {
